@@ -1,4 +1,4 @@
-# OpenKalsh
+# Clawshi
 
 Selenium-based scraper for [Kalshi.com](https://kalshi.com) prediction markets, packaged as a drop-in [OpenClaw](https://github.com/openclaw/openclaw) skill.
 
@@ -10,14 +10,14 @@ Clone or copy this repo directly into your OpenClaw `skills/` directory:
 
 ```bash
 cd <your-workspace>/skills
-git clone https://github.com/Payo-Systems/OpenKalsh.git kalshi-scraper
+git clone https://github.com/Payo-Systems/Clawshi.git kalshi-scraper
 ```
 
 Or into the global skills directory:
 
 ```bash
 cd ~/.openclaw/skills
-git clone https://github.com/Payo-Systems/OpenKalsh.git kalshi-scraper
+git clone https://github.com/Payo-Systems/Clawshi.git kalshi-scraper
 ```
 
 OpenClaw discovers it automatically on the next session.
