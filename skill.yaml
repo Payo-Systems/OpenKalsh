@@ -1,7 +1,5 @@
-name: kalshi-scraper
-description: Scrape live prediction market data from Kalshi.com using Selenium. Handles Kalshi's React SPA by rendering the page in a headless browser and extracting market titles, outcome labels, and prices as structured JSON.
+name: kalshi-market-data
+description: Fetch live prediction market data from Kalshi.com using the public REST API. Returns market titles, outcome labels, and prices as structured JSON.
 entrypoint: main.py
-version: 1.0.0
-dependencies:
-  - selenium
-  - webdriver-manager
+version: 2.0.0
+dependencies: []

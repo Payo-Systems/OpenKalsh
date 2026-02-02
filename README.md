@@ -1,8 +1,6 @@
 # Clawshi
 
-Selenium-based scraper for [Kalshi.com](https://kalshi.com) prediction markets, packaged as a drop-in [OpenClaw](https://github.com/openclaw/openclaw) skill.
-
-> **Disclaimer:** The official [Kalshi API](https://trading-api.readme.io/reference) is the preferred method for programmatic data access. This scraper is for ad-hoc visual validation only. Respect Kalshi's Terms of Service.
+Kalshi prediction market data via the public REST API, packaged as a drop-in [OpenClaw](https://github.com/openclaw/openclaw) skill.
 
 ## Installation
 
@@ -10,35 +8,26 @@ Clone or copy this repo directly into your OpenClaw `skills/` directory:
 
 ```bash
 cd <your-workspace>/skills
-git clone https://github.com/Payo-Systems/Clawshi.git kalshi-scraper
+git clone https://github.com/Payo-Systems/Clawshi.git kalshi-market-data
 ```
 
 Or into the global skills directory:
 
 ```bash
 cd ~/.openclaw/skills
-git clone https://github.com/Payo-Systems/Clawshi.git kalshi-scraper
+git clone https://github.com/Payo-Systems/Clawshi.git kalshi-market-data
 ```
 
 OpenClaw discovers it automatically on the next session.
 
 ### Dependencies
 
-```bash
-pip install selenium webdriver-manager
-```
-
-If no Chrome/Chromium is on your system:
-
-```bash
-pip install playwright
-python3 -m playwright install chromium
-```
+No external dependencies. Uses Python stdlib only (`urllib.request` + `json`).
 
 ### Verify
 
 ```bash
-python3 main.py browse --url "https://kalshi.com/category/politics" --max 3
+python3 main.py browse --url "https://kalshi.com" --max 3
 ```
 
 ### Optional: openclaw.json
@@ -47,7 +36,7 @@ python3 main.py browse --url "https://kalshi.com/category/politics" --max 3
 {
   "skills": {
     "entries": {
-      "kalshi-scraper": {
+      "kalshi-market-data": {
         "enabled": true
       }
     }
@@ -62,7 +51,7 @@ skill.yaml          # OpenClaw manifest
 main.py             # Entrypoint — exposes browse() and market()
 SKILL.md            # Skill docs
 scripts/
-  scrape_markets.py # Scraper (headless Selenium)
+  kalshi_api.py     # REST API client (stdlib only)
 ```
 
 ## Usage
@@ -73,13 +62,19 @@ scripts/
 python3 main.py browse --url "https://kalshi.com/category/politics" --max 5
 ```
 
-Categories: `politics`, `economics`, `crypto`, `climate`, `culture`, `companies`, `financials`.
+Filter by category: `politics`, `economics`, `crypto`, `climate`, `culture`, `companies`, `financials`, `mentions`, `science`.
 Sports: `https://kalshi.com/sports/all-sports`.
 
-### Scrape a single market
+### Fetch a single market
 
 ```bash
-python3 main.py market "https://kalshi.com/markets/kxfedchairnom/fed-chair-nominee/kxfedchairnom-29"
+python3 main.py market "https://kalshi.com/markets/kxfed/fed-meeting/kxfed-26mar"
+```
+
+You can also pass a bare event ticker:
+
+```bash
+python3 main.py market "KXFED-26MAR"
 ```
 
 ### Output
@@ -104,19 +99,4 @@ Market returns a JSON object:
   "status": "ok",
   "error": null
 }
-```
-
-### Flags
-
-| Flag              | Description                           |
-|-------------------|---------------------------------------|
-| `--no-headless`   | Launch visible browser for debugging. |
-| `--chrome-binary` | Override Chrome binary path.          |
-| `--chromedriver`  | Override chromedriver binary path.     |
-
-You can also use the full CLI via the scraper directly:
-
-```bash
-python3 scripts/scrape_markets.py browse --max 10
-python3 scripts/scrape_markets.py market "<URL>"
 ```

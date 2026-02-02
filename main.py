@@ -1,57 +1,75 @@
-"""OpenClaw skill entrypoint for the Kalshi market scraper.
+"""OpenClaw skill entrypoint for Kalshi market data.
 
-This module wraps scripts/scrape_markets.py so OpenClaw can load and
-execute it as a plugin.  It imports the shared scraper functions and
-exposes them as callable skill actions.
+This module wraps scripts/kalshi_api.py so OpenClaw can load and
+execute it as a plugin.  Uses the Kalshi public REST API — no
+external dependencies required.
 """
 
 import json
 import sys
 import os
 
-# Add the skill root to sys.path so we can import the scraper
+# Add the skill root to sys.path so we can import the API client
 _skill_root = os.path.abspath(os.path.dirname(__file__))
 if _skill_root not in sys.path:
     sys.path.insert(0, _skill_root)
 
-from scripts.scrape_markets import (
-    create_driver,
-    scrape_browse_page,
-    scrape_market_page,
+from scripts.kalshi_api import (
+    parse_kalshi_url,
+    fetch_events,
+    fetch_event,
+    events_to_browse_list,
+    event_to_market_result,
+    KalshiAPIError,
 )
 
 
-def browse(url: str = "https://kalshi.com/category/politics", max_markets: int = 20) -> list[dict]:
-    """List markets from a Kalshi category page.
+def browse(url: str = "https://kalshi.com", max_markets: int = 20) -> list[dict]:
+    """List markets from a Kalshi category or home page.
 
     Args:
-        url: Kalshi category page URL.
+        url: Kalshi page URL or category URL.
         max_markets: Maximum number of markets to return.
 
     Returns:
         List of dicts with 'title' and 'url' keys.
     """
-    driver = create_driver(headless=True)
-    try:
-        return scrape_browse_page(driver, url=url, max_markets=max_markets)
-    finally:
-        driver.quit()
+    parsed = parse_kalshi_url(url)
+    category_slug = parsed.get("category_slug")
+    events = fetch_events(category_slug=category_slug, limit=max_markets)
+    return events_to_browse_list(events, max_markets=max_markets)
 
 
 def market(url: str) -> dict:
-    """Scrape a single Kalshi market page.
+    """Fetch data for a single Kalshi market/event.
 
     Args:
-        url: Full URL of the Kalshi market page.
+        url: Full URL of the Kalshi market page, or an event ticker.
 
     Returns:
         Dict with 'title', 'outcomes', 'status', and 'error' keys.
     """
-    driver = create_driver(headless=True)
+    parsed = parse_kalshi_url(url)
+    event_ticker = parsed.get("event_ticker")
+
+    if not event_ticker:
+        return {
+            "title": None,
+            "outcomes": [],
+            "status": "error",
+            "error": f"Could not extract event ticker from URL: {url}",
+        }
+
     try:
-        return scrape_market_page(driver, url=url)
-    finally:
-        driver.quit()
+        event = fetch_event(event_ticker)
+        return event_to_market_result(event)
+    except KalshiAPIError as exc:
+        return {
+            "title": None,
+            "outcomes": [],
+            "status": "error",
+            "error": str(exc),
+        }
 
 
 # Allow direct execution: python main.py browse|market [args]
@@ -64,7 +82,7 @@ if __name__ == "__main__":
     command = sys.argv[1]
 
     if command == "browse":
-        url = "https://kalshi.com/category/politics"
+        url = "https://kalshi.com"
         max_m = 20
         args = sys.argv[2:]
         i = 0
